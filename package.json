@@ -13,7 +13,7 @@
     "dev": "next dev -p 3400",
     "build": "next build",
     "start": "next start -p 3400",
-    "worker": "tsx worker/index.ts",
+    "worker": "tsx --env-file-if-exists=.env.local worker/index.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -21,10 +21,11 @@
     "test": "node --experimental-vm-modules --no-warnings=ExperimentalWarning node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules --no-warnings=ExperimentalWarning node_modules/jest/bin/jest.js --watch",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx scripts/migrate.ts",
-    "db:seed": "tsx scripts/seed.ts",
+    "db:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate.ts",
+    "db:seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts",
     "check": "npm run lint && npm run format:check && npm run typecheck && npm test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build:worker": "esbuild worker/index.ts scripts/migrate.ts scripts/seed.ts --bundle --platform=node --target=node22 --format=esm --packages=external --outdir=dist --entry-names=[name]"
   },
   "dependencies": {
     "@emotion/cache": "11.14.0",
@@ -61,6 +62,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "drizzle-kit": "0.31.11",
+    "esbuild": "0.28.2",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.6",
     "eslint-config-prettier": "10.1.8",

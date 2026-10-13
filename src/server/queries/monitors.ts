@@ -28,7 +28,8 @@ export type MonitorSummary = Pick<
 // The dashboard list: three independent queries in parallel instead of one per monitor.
 export async function listMonitorSummaries(db: Db, now = new Date()): Promise<MonitorSummary[]> {
   const dayAgo = new Date(now.getTime() - DAY);
-  const monthAgo = new Date(now.getTime() - 30 * DAY).toISOString().slice(0, 10);
+  // Today plus the 29 days before it, matching how the 90-day bars count days.
+  const monthAgo = new Date(now.getTime() - 29 * DAY).toISOString().slice(0, 10);
   const [rows, last24h, last30d, spark] = await Promise.all([
     db.select().from(monitors).orderBy(asc(monitors.name)),
     db
