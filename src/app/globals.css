@@ -1,0 +1,40 @@
+/* MUI styles live in their own layer so Tailwind utilities can override them predictably. */
+@layer theme, base, mui, components, utilities;
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tailwind colors read MUI's theme variables, so both libraries share one palette and one dark mode. */
+@theme inline {
+  --color-brand: var(--mui-palette-primary-main);
+  --color-surface: var(--mui-palette-background-paper);
+  --color-page: var(--mui-palette-background-default);
+  --color-ink: var(--mui-palette-text-primary);
+  --color-muted: var(--mui-palette-text-secondary);
+  --color-line: var(--mui-palette-divider);
+  --color-up: var(--pb-up);
+  --color-down: var(--pb-down);
+  --color-degraded: var(--pb-degraded);
+  --color-idle: var(--pb-idle);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+}
+
+:root {
+  --pb-up: #16a34a;
+  --pb-down: #dc2626;
+  --pb-degraded: #d97706;
+  --pb-idle: #cbd5e1;
+}
+
+.dark {
+  --pb-up: #22c55e;
+  --pb-down: #f87171;
+  --pb-degraded: #fbbf24;
+  --pb-idle: #334155;
+}
+
+body {
+  background: var(--mui-palette-background-default);
+  color: var(--mui-palette-text-primary);
+}
