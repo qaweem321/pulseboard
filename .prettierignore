@@ -4,3 +4,4 @@ coverage
 drizzle/meta
 package-lock.json
 keycloak/*.json
+dist

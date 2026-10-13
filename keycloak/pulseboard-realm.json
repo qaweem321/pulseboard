@@ -1,0 +1,96 @@
+{
+  "realm": "pulseboard",
+  "displayName": "Pulseboard",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      { "name": "viewer", "description": "Sees monitors, incidents and status pages" },
+      { "name": "editor", "description": "Manages monitors, incidents and status pages", "composite": true, "composites": { "realm": ["viewer"] } },
+      { "name": "admin", "description": "Also manages alert channels", "composite": true, "composites": { "realm": ["editor"] } }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "pulseboard-web",
+      "name": "Pulseboard",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "pulseboard-dev-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "http://localhost:3400",
+      "baseUrl": "/dashboard",
+      "redirectUris": ["http://localhost:3400/api/auth/callback"],
+      "webOrigins": ["http://localhost:3400"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:3400/"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "roles",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@pulseboard.local",
+      "emailVerified": true,
+      "firstName": "Ada",
+      "lastName": "Admin",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "admin", "temporary": false }],
+      "realmRoles": ["admin"]
+    },
+    {
+      "username": "editor",
+      "email": "editor@pulseboard.local",
+      "emailVerified": true,
+      "firstName": "Eddie",
+      "lastName": "Editor",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "editor", "temporary": false }],
+      "realmRoles": ["editor"]
+    },
+    {
+      "username": "viewer",
+      "email": "viewer@pulseboard.local",
+      "emailVerified": true,
+      "firstName": "Vera",
+      "lastName": "Viewer",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "viewer", "temporary": false }],
+      "realmRoles": ["viewer"]
+    },
+    {
+      "username": "newcomer",
+      "email": "newcomer@pulseboard.local",
+      "emailVerified": true,
+      "firstName": "Noah",
+      "lastName": "Newcomer",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "newcomer", "temporary": false }],
+      "realmRoles": []
+    }
+  ]
+}

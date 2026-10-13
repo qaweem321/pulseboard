@@ -1,0 +1,84 @@
+# Local development and self-hosting.
+#   docker compose up -d                         # Postgres + Keycloak, for `npm run dev`
+#   docker compose --profile app up -d --build   # everything, at http://localhost:3400
+#
+# The secrets below are for local use only. Change them before exposing this anywhere.
+
+x-app-env: &app-env
+  DATABASE_URL: postgres://pulseboard:pulseboard@postgres:5432/pulseboard
+  APP_URL: http://localhost:3400
+  # The browser and the app container must see the same issuer URL. *.localhost resolves to
+  # 127.0.0.1 in browsers, and the network alias below points it at Keycloak inside Docker.
+  OIDC_ISSUER: http://auth.localhost:8080/realms/pulseboard
+  OIDC_CLIENT_ID: pulseboard-web
+  OIDC_CLIENT_SECRET: pulseboard-dev-secret
+  SESSION_SECRET: change-me-to-a-long-random-string-0123456789
+  MONITOR_ALLOW_HOSTS: ""
+
+services:
+  postgres:
+    image: postgres:17.11-alpine3.24
+    environment:
+      POSTGRES_USER: pulseboard
+      POSTGRES_PASSWORD: pulseboard
+      POSTGRES_DB: pulseboard
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulseboard"]
+      interval: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.4
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/pulseboard-realm.json:/opt/keycloak/data/import/pulseboard-realm.json:ro
+    networks:
+      default:
+        aliases:
+          - auth.localhost
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q UP <&3",
+        ]
+      interval: 10s
+      retries: 20
+
+  migrate:
+    build: { context: ., target: worker }
+    command: ["sh", "-c", "node dist/migrate.js && node dist/seed.js"]
+    environment: *app-env
+    depends_on:
+      postgres: { condition: service_healthy }
+    profiles: ["app"]
+
+  web:
+    build: { context: ., target: web }
+    environment: *app-env
+    ports:
+      - "3400:3400"
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      keycloak: { condition: service_healthy }
+    profiles: ["app"]
+
+  worker:
+    build: { context: ., target: worker }
+    environment: *app-env
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    profiles: ["app"]
+
+volumes:
+  pgdata:
