@@ -10,7 +10,9 @@ export default async function config() {
     createJestConfig({
       ...shared,
       displayName: "dom",
-      testEnvironment: "jsdom",
+      // userEvent typing into MUI fields is slow on busy CI machines.
+      testTimeout: 15_000,
+      testEnvironment: "<rootDir>/jest.environment.mjs",
       setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
       testMatch: ["<rootDir>/src/**/*.test.tsx"],
     })(),
@@ -21,5 +23,8 @@ export default async function config() {
       testMatch: ["<rootDir>/src/**/*.test.ts", "<rootDir>/worker/**/*.test.ts"],
     })(),
   ]);
+  // d3 ships ES modules only; let SWC transform it (Next.js skips node_modules by default).
+  const esm = ["d3", "d3-[a-z-]+", "internmap", "delaunator", "robust-predicates"].join("|");
+  dom.transformIgnorePatterns = [`/node_modules/(?!(${esm})/)`, ...dom.transformIgnorePatterns.slice(1)];
   return { projects: [dom, node] };
 }
