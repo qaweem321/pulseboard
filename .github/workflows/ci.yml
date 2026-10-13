@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Commit messages follow Conventional Commits
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm test -- --ci --coverage
+      - run: npm run build
+      - run: npm run build:worker
+
+  migrations:
+    name: Migrations on real Postgres
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.11-alpine3.24
+        env:
+          POSTGRES_USER: pulseboard
+          POSTGRES_PASSWORD: pulseboard
+          POSTGRES_DB: pulseboard
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pulseboard" --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://pulseboard:pulseboard@localhost:5432/pulseboard
+      APP_URL: http://localhost:3400
+      OIDC_ISSUER: http://localhost:8080/realms/pulseboard
+      OIDC_CLIENT_ID: pulseboard-web
+      OIDC_CLIENT_SECRET: ci-secret
+      SESSION_SECRET: ci-session-secret-ci-session-secret-0000
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Migrations apply cleanly, twice
+        run: npm run db:migrate && npm run db:migrate
+      - name: Schema matches the migrations
+        run: npx drizzle-kit check && npx drizzle-kit generate --name ci-drift && test -z "$(git status --porcelain drizzle)"
+      - run: npm run db:seed
+
+  docker:
+    name: Docker images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: docker/setup-buildx-action@v4.4.1
+      - uses: docker/build-push-action@v7.4.0
+        with:
+          context: .
+          target: web
+          tags: pulseboard-web:ci
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+      - uses: docker/build-push-action@v7.4.0
+        with:
+          context: .
+          target: worker
+          tags: pulseboard-worker:ci
+          cache-from: type=gha,scope=worker
+          cache-to: type=gha,mode=max,scope=worker
