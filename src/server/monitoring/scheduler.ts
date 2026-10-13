@@ -50,44 +50,44 @@ export async function recordCheck(
     if (!current || current.status === "paused") return null;
     const transition = nextState(current, outcome);
     const day = at.toISOString().slice(0, 10);
-    const [[monitor]] = await Promise.all([
-      tx
-        .update(monitors)
-        .set({
-          status: transition.status,
-          consecutiveFailures: transition.consecutiveFailures,
-          lastCheckedAt: at,
-          lastResponseMs: outcome.responseMs,
-          lastError: outcome.error,
-        })
-        .where(eq(monitors.id, monitorId))
-        .returning(),
-      tx.insert(checkResults).values({
+    // Sequential on purpose: a transaction is one connection, so parallel statements would only queue
+    // (and node-postgres deprecates overlapping queries on one client).
+    const [monitor] = await tx
+      .update(monitors)
+      .set({
+        status: transition.status,
+        consecutiveFailures: transition.consecutiveFailures,
+        lastCheckedAt: at,
+        lastResponseMs: outcome.responseMs,
+        lastError: outcome.error,
+      })
+      .where(eq(monitors.id, monitorId))
+      .returning();
+    await tx.insert(checkResults).values({
+      monitorId,
+      checkedAt: at,
+      ok: outcome.ok,
+      statusCode: outcome.statusCode,
+      responseMs: outcome.responseMs,
+      error: outcome.error,
+    });
+    await tx
+      .insert(dailyStats)
+      .values({
         monitorId,
-        checkedAt: at,
-        ok: outcome.ok,
-        statusCode: outcome.statusCode,
-        responseMs: outcome.responseMs,
-        error: outcome.error,
-      }),
-      tx
-        .insert(dailyStats)
-        .values({
-          monitorId,
-          day,
-          checks: 1,
-          failures: outcome.ok ? 0 : 1,
-          totalResponseMs: outcome.responseMs ?? 0,
-        })
-        .onConflictDoUpdate({
-          target: [dailyStats.monitorId, dailyStats.day],
-          set: {
-            checks: sql`${dailyStats.checks} + 1`,
-            failures: sql`${dailyStats.failures} + ${outcome.ok ? 0 : 1}`,
-            totalResponseMs: sql`${dailyStats.totalResponseMs} + ${outcome.responseMs ?? 0}`,
-          },
-        }),
-    ]);
+        day,
+        checks: 1,
+        failures: outcome.ok ? 0 : 1,
+        totalResponseMs: outcome.responseMs ?? 0,
+      })
+      .onConflictDoUpdate({
+        target: [dailyStats.monitorId, dailyStats.day],
+        set: {
+          checks: sql`${dailyStats.checks} + 1`,
+          failures: sql`${dailyStats.failures} + ${outcome.ok ? 0 : 1}`,
+          totalResponseMs: sql`${dailyStats.totalResponseMs} + ${outcome.responseMs ?? 0}`,
+        },
+      });
     let incident: Incident | null = null;
     if (transition.event === "down") {
       [incident = null] = await tx
