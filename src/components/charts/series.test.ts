@@ -33,3 +33,9 @@ test("seriesStats weights the average by the number of checks", () => {
   });
   expect(seriesStats([])).toEqual({ avgMs: null, maxMs: null, checks: 0, failures: 0 });
 });
+
+test("seriesStats ignores buckets where every check failed without a response time", () => {
+  const failedOnly = { t: "c", avgMs: null, maxMs: null, checks: 5, failures: 5 };
+  expect(seriesStats([failedOnly])).toEqual({ avgMs: null, maxMs: null, checks: 5, failures: 5 });
+  expect(seriesStats([point("a", 100, 2), failedOnly]).avgMs).toBe(100);
+});

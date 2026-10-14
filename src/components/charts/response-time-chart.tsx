@@ -48,9 +48,11 @@ export function ResponseTimeChart({ points, from, to, bucketMs, height = 240 }: 
   const bucketWidth = Math.max(2, x(new Date(new Date(from).getTime() + bucketMs)) - x(new Date(from)));
 
   const label =
-    stats.avgMs === null
+    stats.checks === 0
       ? "Response time chart: no checks in this period."
-      : `Response time chart: average ${stats.avgMs} ms, slowest ${stats.maxMs} ms, ${stats.failures} failed checks out of ${stats.checks}.`;
+      : stats.avgMs === null
+        ? `Response time chart: all ${stats.checks} checks failed without a response.`
+        : `Response time chart: average ${stats.avgMs} ms, slowest ${stats.maxMs} ms, ${stats.failures} failed checks out of ${stats.checks}.`;
 
   return (
     <div ref={ref} className="relative w-full">

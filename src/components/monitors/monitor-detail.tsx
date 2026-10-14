@@ -220,9 +220,9 @@ function ResponseTimeCard({ id }: { id: number }) {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-semibold">Response time</h2>
-          {stats && stats.avgMs !== null && (
+          {stats && stats.checks > 0 && (
             <p className="text-sm text-muted">
-              Average {stats.avgMs} ms · slowest {stats.maxMs} ms ·{" "}
+              {stats.avgMs !== null && `Average ${stats.avgMs} ms · slowest ${stats.maxMs} ms · `}
               {formatUptime(uptimePercent(stats.checks, stats.failures))} uptime
             </p>
           )}

@@ -35,14 +35,18 @@ export function fillBuckets(
 
 export function seriesStats(points: readonly ResponsePoint[]) {
   let weighted = 0;
+  let timedChecks = 0; // checks in buckets that recorded a response time
   let checks = 0;
   let failures = 0;
   let max: number | null = null;
   for (const p of points) {
     checks += p.checks;
     failures += p.failures;
-    if (p.avgMs !== null) weighted += p.avgMs * p.checks;
+    if (p.avgMs !== null) {
+      weighted += p.avgMs * p.checks;
+      timedChecks += p.checks;
+    }
     if (p.maxMs !== null) max = Math.max(max ?? 0, p.maxMs);
   }
-  return { avgMs: checks ? Math.round(weighted / checks) : null, maxMs: max, checks, failures };
+  return { avgMs: timedChecks ? Math.round(weighted / timedChecks) : null, maxMs: max, checks, failures };
 }
