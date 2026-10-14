@@ -1,4 +1,4 @@
-import { fieldErrors, monitorInput, statusPageInput } from "./validation";
+import { fieldErrors, monitorInput, normalizeMonitorUrl, statusPageInput } from "./validation";
 
 test("monitor input fills defaults and normalises optional text", () => {
   expect(monitorInput.parse({ name: " API ", url: "https://api.example.com/health", keyword: "  " })).toEqual(
@@ -31,6 +31,21 @@ test("monitor input reports every bad field", () => {
     intervalSeconds: "Pick one of the intervals",
     timeoutMs: "At least 1 second",
   });
+});
+
+test("monitor input rejects a URL with the scheme typed twice", () => {
+  const result = monitorInput.safeParse({ name: "GitHub", url: "https://https://github.com" });
+  expect(result.success).toBe(false);
+  expect(fieldErrors(result.error!).url).toBe("The URL starts with http(s):// twice");
+});
+
+test("normalizeMonitorUrl adds a missing scheme and drops a doubled one", () => {
+  expect(normalizeMonitorUrl(" example.com ")).toBe("https://example.com");
+  expect(normalizeMonitorUrl("https://https://github.com")).toBe("https://github.com");
+  expect(normalizeMonitorUrl("https://http://api.local/health")).toBe("http://api.local/health");
+  expect(normalizeMonitorUrl("http://example.com")).toBe("http://example.com");
+  expect(normalizeMonitorUrl("ftp://files.example.com")).toBe("ftp://files.example.com");
+  expect(normalizeMonitorUrl("")).toBe("");
 });
 
 test("status page slugs are URL-safe", () => {

@@ -7,7 +7,13 @@ import TextField from "@mui/material/TextField";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { fieldErrors, INTERVAL_OPTIONS, monitorInput, type MonitorInput } from "@/lib/validation";
+import {
+  fieldErrors,
+  INTERVAL_OPTIONS,
+  monitorInput,
+  normalizeMonitorUrl,
+  type MonitorInput,
+} from "@/lib/validation";
 import {
   errorFields,
   errorMessage,
@@ -40,7 +46,7 @@ type FormState = {
 function initialState(monitor?: MonitorDto): FormState {
   return {
     name: monitor?.name ?? "",
-    url: monitor?.url ?? "https://",
+    url: monitor?.url ?? "",
     method: monitor?.method ?? "GET",
     intervalSeconds: monitor?.intervalSeconds ?? 60,
     expectedStatus: monitor?.expectedStatus ?? "200-299",
@@ -53,7 +59,7 @@ function initialState(monitor?: MonitorDto): FormState {
 export function toInput(form: FormState): MonitorInput {
   return {
     name: form.name,
-    url: form.url,
+    url: normalizeMonitorUrl(form.url),
     method: form.method,
     intervalSeconds: form.intervalSeconds,
     expectedStatus: form.expectedStatus,

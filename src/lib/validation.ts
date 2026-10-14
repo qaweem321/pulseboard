@@ -14,6 +14,13 @@ const optionalText = (max: number) =>
     .default(null)
     .transform((value) => value || null);
 
+// What people type into the URL box: "example.com" gets https://, and a pasted full URL after a
+// typed "https://" loses the duplicate. Anything else is left for monitorInput to judge.
+export function normalizeMonitorUrl(value: string) {
+  const url = value.trim().replace(/^(?:https?:\/\/)+(https?:\/\/)/i, "$1");
+  return url && !/^[a-z][a-z\d+.-]*:/i.test(url) ? `https://${url}` : url;
+}
+
 export const INTERVAL_OPTIONS = [30, 60, 120, 300, 600, 1800, 3600] as const;
 
 export const monitorInput = z.object({
@@ -22,7 +29,8 @@ export const monitorInput = z.object({
     .string()
     .trim()
     .url("Enter a full URL, like https://example.com/health")
-    .refine((value) => /^https?:\/\//i.test(value), "Only http and https URLs can be monitored"),
+    .refine((value) => /^https?:\/\//i.test(value), "Only http and https URLs can be monitored")
+    .refine((value) => !/^https?:\/\/https?:?\/\//i.test(value), "The URL starts with http(s):// twice"),
   method: z.enum(["GET", "HEAD", "POST"]).default("GET"),
   expectedStatus: z
     .string()
