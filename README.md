@@ -52,7 +52,7 @@ These passwords and secrets are for local use only. Change them before deploying
 ```bash
 docker compose up -d          # Postgres and Keycloak only
 cp .env.example .env.local
-npm install
+npm ci
 npm run db:migrate && npm run db:seed
 npm run dev                   # http://localhost:3400
 npm run worker                # in a second terminal: runs the checks
