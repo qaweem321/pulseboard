@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const expired = params.expired === "1";
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <main className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex justify-center">
           <Logo href="/" />
@@ -38,12 +38,12 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           )}
           <a
             href={`/api/auth/login?next=${encodeURIComponent(next)}`}
-            className="mt-6 block rounded-lg bg-brand px-4 py-2.5 text-center font-semibold text-white no-underline"
+            className="mt-6 block rounded-lg bg-brand px-4 py-2.5 text-center font-semibold text-on-brand no-underline"
           >
             Continue with Keycloak
           </a>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

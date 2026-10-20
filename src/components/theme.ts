@@ -9,9 +9,9 @@ export const theme = createTheme({
       palette: {
         primary: { main: "#4f46e5" },
         background: { default: "#f8fafc", paper: "#ffffff" },
-        success: { main: "#16a34a" },
+        success: { main: "#15803d" },
         error: { main: "#dc2626" },
-        warning: { main: "#d97706" },
+        warning: { main: "#b45309" },
       },
     },
     dark: {

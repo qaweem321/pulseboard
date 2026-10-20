@@ -45,14 +45,14 @@ export default async function LandingPage() {
           {user ? (
             <Link
               href="/dashboard"
-              className="rounded-lg bg-brand px-4 py-2 font-semibold text-white no-underline"
+              className="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand no-underline"
             >
               Go to dashboard
             </Link>
           ) : (
             <Link
               href="/login"
-              className="rounded-lg bg-brand px-4 py-2 font-semibold text-white no-underline"
+              className="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand no-underline"
             >
               Sign in
             </Link>
@@ -75,7 +75,7 @@ export default async function LandingPage() {
           <div className="mt-8 flex justify-center gap-3">
             <Link
               href={user ? "/dashboard" : "/login"}
-              className="rounded-lg bg-brand px-5 py-3 font-semibold text-white no-underline"
+              className="rounded-lg bg-brand px-5 py-3 font-semibold text-on-brand no-underline"
             >
               {user ? "Go to dashboard" : "Sign in"}
             </Link>

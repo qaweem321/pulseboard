@@ -20,9 +20,9 @@ export async function generateMetadata({ params }: PageProps<"/status/[slug]">):
 }
 
 const BANNER: Record<OverallStatus, string> = {
-  operational: "bg-up text-white",
-  partial_outage: "bg-degraded text-white",
-  major_outage: "bg-down text-white",
+  operational: "bg-up text-on-status",
+  partial_outage: "bg-degraded text-on-status",
+  major_outage: "bg-down text-on-status",
   unknown: "bg-idle text-ink",
 };
 
@@ -39,7 +39,7 @@ export default async function StatusPage({ params }: PageProps<"/status/[slug]">
   const overall = overallStatus(data.monitors.map((m) => m.status));
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
+    <main className="mx-auto max-w-3xl px-4 py-10">
       <header className="mb-8">
         <h1 className="text-3xl font-semibold tracking-tight">{data.page.title}</h1>
         {data.page.description && <p className="mt-2 text-muted">{data.page.description}</p>}
@@ -109,6 +109,6 @@ export default async function StatusPage({ params }: PageProps<"/status/[slug]">
       <footer className="mt-12 flex items-center justify-center gap-2 text-xs text-muted">
         <LogoMark size={16} /> Powered by Pulseboard · All times in UTC
       </footer>
-    </div>
+    </main>
   );
 }
