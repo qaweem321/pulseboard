@@ -1,6 +1,5 @@
 {
   "name": "pulseboard",
-  "version": "0.1.0",
   "private": true,
   "description": "Self-hosted uptime monitoring and status pages. Next.js, Keycloak SSO, Postgres, D3.",
   "license": "MIT",
