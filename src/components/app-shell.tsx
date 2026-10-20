@@ -1,13 +1,12 @@
 "use client";
 
-import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
-import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
-import Tooltip from "@mui/material/Tooltip";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { useColorScheme } from "@mui/material/styles";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,7 +43,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-1">
-            <ThemeToggle />
             <UserMenu />
           </div>
         </div>
@@ -73,17 +71,35 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
   );
 }
 
-function ThemeToggle() {
-  const { mode, systemMode, setMode } = useColorScheme();
-  const resolved = mode === "system" ? systemMode : mode;
-  if (!resolved) return <span className="h-10 w-10" />;
-  const next = resolved === "dark" ? "light" : "dark";
+const THEME_MODES = [
+  { value: "system", label: "System" },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+] as const;
+
+// Theme choice in the account menu. MUI saves it in this browser; "system" follows the device.
+function ThemeChoice() {
+  const { mode, setMode } = useColorScheme();
   return (
-    <Tooltip title={`Switch to ${next} mode`}>
-      <IconButton onClick={() => setMode(next)} aria-label={`Switch to ${next} mode`}>
-        {resolved === "dark" ? <LightModeOutlined fontSize="small" /> : <DarkModeOutlined fontSize="small" />}
-      </IconButton>
-    </Tooltip>
+    <div className="px-4 py-2">
+      <div id="theme-label" className="mb-1.5 text-xs text-muted">
+        Theme
+      </div>
+      <ToggleButtonGroup
+        size="small"
+        exclusive
+        fullWidth
+        aria-labelledby="theme-label"
+        value={mode ?? "system"}
+        onChange={(_event, value: (typeof THEME_MODES)[number]["value"] | null) => value && setMode(value)}
+      >
+        {THEME_MODES.map((option) => (
+          <ToggleButton key={option.value} value={option.value}>
+            {option.label}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
+    </div>
   );
 }
 
@@ -115,6 +131,8 @@ function UserMenu() {
           <div className="text-xs text-muted">{user.email}</div>
           <div className="mt-1 text-xs capitalize text-muted">Role: {user.role ?? "none"}</div>
         </div>
+        <Divider />
+        <ThemeChoice />
         <Divider />
         <form
           action="/api/auth/logout"
