@@ -1,4 +1,10 @@
-import { fieldErrors, monitorInput, normalizeMonitorUrl, statusPageInput } from "./validation";
+import {
+  fieldErrors,
+  monitorInput,
+  normalizeMonitorUrl,
+  parseMonitorPatch,
+  statusPageInput,
+} from "./validation";
 
 test("monitor input fills defaults and normalises optional text", () => {
   expect(monitorInput.parse({ name: " API ", url: "https://api.example.com/health", keyword: "  " })).toEqual(
@@ -52,4 +58,12 @@ test("status page slugs are URL-safe", () => {
   expect(statusPageInput.parse({ title: "Acme", slug: "Acme-Status" }).slug).toBe("acme-status");
   expect(statusPageInput.safeParse({ title: "Acme", slug: "-acme" }).success).toBe(false);
   expect(statusPageInput.safeParse({ title: "Acme", slug: "acme/../x" }).success).toBe(false);
+});
+
+test("a monitor patch keeps only the fields that were sent", () => {
+  expect(parseMonitorPatch({ paused: true })).toEqual({ paused: true });
+  expect(parseMonitorPatch({ keyword: "", intervalSeconds: "300" })).toEqual({
+    keyword: null,
+    intervalSeconds: 300,
+  });
 });

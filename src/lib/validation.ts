@@ -56,6 +56,14 @@ export type MonitorValues = z.output<typeof monitorInput>;
 
 export const monitorPatch = monitorInput.partial().extend({ paused: z.boolean().optional() });
 
+// Zod 4 still fills in .default() values for keys a partial schema leaves out, so a pause-only
+// PATCH would reset every setting. Keep only the fields the client actually sent.
+export function parseMonitorPatch(body: unknown): z.output<typeof monitorPatch> {
+  const parsed = monitorPatch.parse(body);
+  const sent = typeof body === "object" && body !== null ? body : {};
+  return Object.fromEntries(Object.entries(parsed).filter(([key]) => key in sent));
+}
+
 export const statusPageInput = z.object({
   title: trimmed(80),
   slug: z

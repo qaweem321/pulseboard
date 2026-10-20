@@ -1,4 +1,4 @@
-import { monitorPatch } from "@/lib/validation";
+import { parseMonitorPatch } from "@/lib/validation";
 import { db } from "@/server/db";
 import { apiRoute, json, notFound, parseId, readJson } from "@/server/http/api";
 import { deleteMonitor, updateMonitor } from "@/server/mutations";
@@ -13,7 +13,7 @@ export const GET = apiRoute<Params>("viewer", async ({ params }) => {
 });
 
 export const PATCH = apiRoute<Params>("editor", async ({ params, request }) => {
-  const patch = monitorPatch.parse(await readJson(request));
+  const patch = parseMonitorPatch(await readJson(request));
   const monitor = await updateMonitor(db(), parseId(params.id), patch);
   if (!monitor) throw notFound("Monitor not found");
   return json(monitor);
