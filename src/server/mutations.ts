@@ -25,7 +25,8 @@ export async function createMonitor(db: Db, values: Out<typeof monitorInput>) {
 }
 
 // Pausing closes any open incident (nobody wants an alert storm about planned maintenance).
-// Resuming starts over as "pending" and checks right away.
+// Resuming starts over as "pending" and checks right away; so does any settings change, so a new
+// interval or URL takes effect now instead of after the old interval runs out.
 export async function updateMonitor(db: Db, id: number, patch: Out<typeof monitorPatch>, now = new Date()) {
   const { paused, ...fields } = patch;
   return db.transaction(async (tx) => {
@@ -40,6 +41,8 @@ export async function updateMonitor(db: Db, id: number, patch: Out<typeof monito
         .where(and(eq(incidents.monitorId, id), isNull(incidents.resolvedAt)));
     } else if (paused === false && current.status === "paused") {
       Object.assign(state, { status: "pending", consecutiveFailures: 0, nextCheckAt: now });
+    } else if (Object.keys(fields).length > 0 && current.status !== "paused" && paused !== true) {
+      state.nextCheckAt = now;
     }
     const [monitor] = await tx
       .update(monitors)

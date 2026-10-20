@@ -1,3 +1,4 @@
+import { parseMonitorPatch } from "@/lib/validation";
 import type { Db } from "../db";
 import { incidents } from "../db/schema";
 import { recordCheck } from "../monitoring/scheduler";
@@ -84,6 +85,16 @@ describe("updateMonitor", () => {
 
     const resumed = await updateMonitor(db, monitor.id, { paused: false, name: "Renamed" }, now);
     expect(resumed).toMatchObject({ status: "pending", name: "Renamed", nextCheckAt: now });
+  });
+
+  it("pausing keeps the settings; a settings change re-checks right away", async () => {
+    const monitor = await createMonitor(db, { keyword: "OK", intervalSeconds: 300, failureThreshold: 5 });
+    const paused = await updateMonitor(db, monitor.id, parseMonitorPatch({ paused: true }), now);
+    expect(paused).toMatchObject({ keyword: "OK", intervalSeconds: 300, failureThreshold: 5 });
+
+    const active = await createMonitor(db, { intervalSeconds: 3600, nextCheckAt: minutesAgo(-50) });
+    const changed = await updateMonitor(db, active.id, parseMonitorPatch({ intervalSeconds: 30 }), now);
+    expect(changed).toMatchObject({ intervalSeconds: 30, nextCheckAt: now });
   });
 
   it("returns null for a missing monitor", async () => {
