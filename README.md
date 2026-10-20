@@ -116,6 +116,14 @@ Library and PGlite · ESLint and Prettier · GitHub Actions · Docker.
 
 The app and worker refuse to start with a missing or invalid value and list every problem at once.
 
+## Running in production
+
+Put the web app behind one reverse proxy (nginx, Caddy, Traefik) that terminates HTTPS and appends
+the visitor's address to `X-Forwarded-For`, which they all do by default. The login rate limit keys
+on the last entry of that header, the one your proxy added; anything before it comes from the
+client and is ignored. Without a proxy, a client could send its own header and every visitor
+counts as one.
+
 ## License
 
 MIT

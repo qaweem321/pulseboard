@@ -16,10 +16,9 @@ export function createRateLimiter({ limit, windowMs }: { limit: number; windowMs
   };
 }
 
+// The last X-Forwarded-For entry: the address our own reverse proxy saw. Earlier entries come from
+// the client and can be anything. Without a proxy, Next.js fills the header with the socket address
+// only when the client didn't send one, so production must run behind a proxy that appends to it.
 export function clientIp(request: Request): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "local"
-  );
+  return request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() || "local";
 }
