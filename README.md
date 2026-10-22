@@ -94,6 +94,31 @@ flowchart LR
 
 The reasoning behind these choices, with trade-offs, is in [docs/DECISIONS.md](docs/DECISIONS.md).
 
+## Project structure
+
+```
+src/
+  app/                    pages and API routes (Next.js App Router)
+    dashboard/            monitors, incidents, alerts, status pages
+    status/[slug]/        public status pages
+    api/                  REST API: monitors, incidents, alert channels, status pages, login
+  components/             UI by area (monitors, incidents, alerts, status pages) and charts/
+  store/                  Redux Toolkit store and RTK Query API client
+  server/
+    monitoring/           checks, state machine (transition.ts), scheduling, alerts
+    auth/                 Keycloak login (OIDC + PKCE) and sessions
+    http/                 apiRoute wrapper, rate limiting
+    queries/, mutations.ts   database reads and writes
+    db/                   Drizzle schema and connection
+    env.ts                settings, checked at start-up
+  lib/                    shared helpers: roles, uptime math, validation, dates
+worker/index.ts           the check worker (run one or more)
+scripts/                  database migration and demo seed
+drizzle/                  database migrations
+keycloak/                 the realm with the demo logins
+Dockerfile, docker-compose.yml   Postgres, Keycloak, app and worker
+```
+
 ## Tech stack
 
 Next.js 16 (App Router) · React 19 · TypeScript · Redux Toolkit and RTK Query · Material UI and
